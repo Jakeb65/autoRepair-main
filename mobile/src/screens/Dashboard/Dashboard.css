@@ -1,0 +1,530 @@
+/* ========================================
+   DASHBOARD - AutoRepair
+   Profesjonalny system dla serwisów samochodowych
+   ======================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+/* GŁÓWNY KONTENER */
+.dashboard-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2a2a2a 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  color: #fff;
+}
+
+/* HEADER - NAGŁÓWEK */
+.dashboard-header {
+  background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 100%);
+  backdrop-filter: blur(10px);
+  padding: 30px 50px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  border-bottom: 3px solid #ff6600;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #ff6600;
+  text-shadow: 0 2px 8px rgba(255, 102, 0, 0.3);
+}
+
+/* TOP HORIZONTAL MENU BAR */
+
+.top-menu-bar {
+  display: flex;
+  gap: 16px;
+  padding: 18px 40px;
+  align-items: center;
+  background: linear-gradient(90deg, rgba(255,102,0,0.03), rgba(0,0,0,0));
+  border-bottom: 1px solid rgba(255,102,0,0.06);
+  width: 100%;
+  /* allow children to shrink so they evenly distribute across the row */
+  flex-wrap: nowrap;
+  overflow-x: hidden;
+}
+
+.top-menu-card {
+  flex: 1 1 0;
+  min-width: 0; /* allow shrinking below intrinsic width */
+  background: linear-gradient(135deg, #111 0%, #1f1f1f 100%);
+  border: 1px solid rgba(255,102,0,0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  justify-content: center;
+}
+
+.top-menu-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(255,102,0,0.08);
+  border-color: #ff8c33;
+}
+
+.top-menu-label {
+  font-size: 13px;
+  color: #ffcc99;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* LOGOUT BUTTON */
+.btn-logout {
+  background: rgba(255, 102, 0, 0.15);
+  color: #ff6600;
+  border: 2px solid #ff6600;
+  padding: 12px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-logout:hover {
+  background: #ff6600;
+  color: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 102, 0, 0.4);
+}
+
+.btn-logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* GŁÓWNA ZAWARTOŚĆ */
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 70px 50px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* MAIN CONTENT LAYOUT */
+.content-area {
+  display: flex;
+  gap: 30px;
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 30px;
+  align-items: flex-start;
+}
+
+.appointment-card {
+  flex: 1 1 520px;
+  background: linear-gradient(135deg, #151515 0%, #222 100%);
+  border: 1px solid rgba(255,102,0,0.12);
+  border-radius: 14px;
+  padding: 24px;
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.appointment-header h3 {
+  margin: 0;
+  color: #ff6600;
+}
+
+.status {
+  background: rgba(255,102,0,0.12);
+  color: #ffbb88;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.appointment-body p {
+  margin: 8px 0;
+  color: #ddd;
+}
+
+.appointment-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary {
+  background: #ff6600;
+  color: #111;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.spacer-card {
+  width: 360px;
+  background: linear-gradient(135deg, #131313 0%, #1d1d1d 100%);
+  border: 1px solid rgba(255,102,0,0.06);
+  border-radius: 14px;
+  padding: 20px;
+  color: #ddd;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* SEKCJA POWITALNA */
+.welcome-section {
+  text-align: center;
+  color: white;
+  max-width: 700px;
+  margin-bottom: 60px;
+  animation: fadeInDown 0.7s ease-out;
+}
+
+.welcome-section h2 {
+  font-size: 48px;
+  font-weight: 800;
+  margin: 0 0 15px 0;
+  color: #ff6600;
+  text-shadow: 0 3px 10px rgba(255, 102, 0, 0.3);
+  letter-spacing: -1.5px;
+}
+
+.welcome-section p {
+  font-size: 18px;
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.6;
+  font-weight: 300;
+  color: #ccc;
+}
+
+/* GRID MENU */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 35px;
+  max-width: 1200px;
+  width: 100%;
+  animation: fadeInUp 0.7s ease-out 0.2s both;
+}
+
+/* KARTY MENU */
+.menu-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+  border: 2px solid #ff6600;
+  border-radius: 12px;
+  padding: 40px 28px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* EFEKT ŚWIETLNY NA HOVER */
+.menu-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.2), transparent);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+.menu-card:hover::before {
+  left: 100%;
+}
+
+.menu-card:hover {
+  transform: translateY(-15px) scale(1.03);
+  box-shadow: 0 25px 60px rgba(255, 102, 0, 0.3);
+  border-color: #ff8c33;
+}
+
+/* IKONA */
+.menu-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1;
+}
+
+.menu-card:hover .menu-icon {
+  transform: scale(1.2) rotate(8deg);
+}
+
+/* TYTUŁ KARTY */
+.menu-card h3 {
+  font-size: 22px;
+  margin: 0 0 12px 0;
+  color: #ff6600;
+  font-weight: 700;
+  transition: color 0.3s ease;
+  letter-spacing: -0.5px;
+}
+
+.menu-card:hover h3 {
+  color: #ff8c33;
+}
+
+/* OPIS KARTY */
+.menu-card p {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* FOOTER */
+.dashboard-footer {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  padding: 25px 50px;
+  color: #aaa;
+  text-align: center;
+  font-size: 13px;
+  border-top: 1px solid rgba(255, 102, 0, 0.2);
+  margin-top: auto;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* ========================================
+   ANIMACJE
+   ======================================== */
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   RESPONSYWNOŚĆ - TABLET (768px i mniej)
+   ======================================== */
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px 30px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 28px;
+  }
+
+  .dashboard-main {
+    padding: 50px 30px;
+    gap: 40px;
+  }
+
+  .welcome-section {
+    margin-bottom: 40px;
+  }
+
+  .welcome-section h2 {
+    font-size: 32px;
+  }
+
+  .welcome-section p {
+    font-size: 16px;
+  }
+
+  .menu-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 25px;
+  }
+
+  .menu-card {
+    padding: 28px 18px;
+  }
+
+  /* Adjust top menu and content area on tablet */
+  .top-menu-bar {
+    padding: 12px 20px;
+    gap: 12px;
+    flex-wrap: wrap; /* allow wrapping on tablet */
+  }
+
+  .top-menu-card {
+    flex: 1 1 calc(33.333% - 12px);
+    padding: 10px 12px;
+    min-width: 0;
+  }
+
+  .content-area {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .spacer-card {
+    width: 100%;
+  }
+
+  .menu-icon {
+    font-size: 44px;
+    margin-bottom: 12px;
+  }
+
+  .menu-card h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .menu-card p {
+    font-size: 12px;
+  }
+
+  .dashboard-footer {
+    padding: 18px 30px;
+    font-size: 13px;
+  }
+}
+
+/* ========================================
+   RESPONSYWNOŚĆ - MOBILE (480px i mniej)
+   ======================================== */
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: 15px 20px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 22px;
+  }
+
+  .btn-logout {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .dashboard-main {
+    padding: 35px 20px;
+  }
+
+  .welcome-section {
+    margin-bottom: 30px;
+  }
+
+  .welcome-section h2 {
+    font-size: 24px;
+  }
+
+  .welcome-section p {
+    font-size: 14px;
+  }
+
+  .menu-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .menu-card {
+    padding: 24px 16px;
+  }
+
+  .menu-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+
+  .menu-card h3 {
+    font-size: 16px;
+  }
+
+  .menu-card p {
+    font-size: 11px;
+  }
+
+  .dashboard-footer {
+    padding: 15px 20px;
+    font-size: 12px;
+  }
+
+  /* Mobile tweaks: top menu smaller and stacked content */
+  .top-menu-bar {
+    padding: 8px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .top-menu-card {
+    flex: 1 1 calc(50% - 8px);
+    padding: 8px 10px;
+    min-width: 0;
+  }
+
+  .content-area {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .spacer-card {
+    width: 100%;
+  }
+}

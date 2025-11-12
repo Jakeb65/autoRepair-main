@@ -1,0 +1,102 @@
+.zlecenia-container {
+  min-height: 100vh;
+  padding: 40px 50px;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2a2a2a 100%);
+  color: #fff;
+}
+
+.zlecenia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(255,102,0,0.2);
+  margin-bottom: 18px;
+}
+.zlecenia-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #ff6600;
+  text-shadow: 0 2px 8px rgba(255,102,0,0.25);
+}
+
+.zlecenia-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.z-search, .z-select {
+  background: linear-gradient(135deg, #111 0%, #1f1f1f 100%);
+  border: 1px solid rgba(255,102,0,0.12);
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.z-search { min-width: 280px; }
+
+.z-btn-primary {
+  background: #ff6600;
+  color: #111;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.z-btn-secondary {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.zlecenia-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  max-width: 1200px;
+  margin: 20px auto 40px;
+}
+
+.order-card {
+  background: linear-gradient(135deg, #151515 0%, #222 100%);
+  border: 1px solid rgba(255,102,0,0.12);
+  border-radius: 14px;
+  padding: 16px;
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+}
+.order-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.order-card .title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffcc99;
+}
+.order-card .meta {
+  color: #ddd;
+  margin: 6px 0;
+}
+.order-card .card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .zlecenia-container { padding: 30px 30px; }
+}
+@media (max-width: 480px) {
+  .zlecenia-container { padding: 22px 20px; }
+}

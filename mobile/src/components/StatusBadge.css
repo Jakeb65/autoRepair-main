@@ -1,0 +1,15 @@
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.1);
+}
+.status-oczekujące { border-color: #ff9a3c; box-shadow: 0 0 12px rgba(255, 154, 60, 0.35); }
+.status-w-trakcie { border-color: #ffd166; box-shadow: 0 0 12px rgba(255, 209, 102, 0.35); }
+.status-zakończone { border-color: #32d583; box-shadow: 0 0 12px rgba(50, 213, 131, 0.35); }
+.status-anulowane { border-color: #ff6b6b; box-shadow: 0 0 12px rgba(255, 107, 107, 0.35); }
