@@ -14,6 +14,7 @@ const Dashboard: React.FC = () => {
   }
 
   const menuItems = [
+    { path: '/UserProfileScreen', label: '👤 Profil', desc: 'Moje dane' },
     { path: '/zlecenia', label: '🧾 Zlecenia' },
     { path: '/pojazdy', label: '🚗 Pojazdy' },
     { path: '/klienci', label: '👥 Klienci' },

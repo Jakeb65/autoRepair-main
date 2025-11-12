@@ -1,585 +1,146 @@
-import React, { useState, useEffect } from 'react';
-import {View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, ImageBackground, Modal, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import BackgroundImage from '../../../assets/images/loginScreenLogo.png';
-import { API_URL } from '../../utils/api';
-
-interface CustomAlertProps {
-  visible: boolean;
-  title: string;
-  message: string;
-  onClose: () => void;
-  type: 'error' | 'success';
-}
-
-type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  Main: undefined;
-};
-
-const CustomAlert: React.FC<CustomAlertProps> = ({ visible, title, message, onClose, type }) => (
-    <Modal
-        transparent
-        visible={visible}
-        animationType="fade"
-        onRequestClose={onClose}
-    >
-      <View style={modalStyles.overlay}>
-        <View style={modalStyles.modalContainer}>
-          <View style={[
-            modalStyles.header,
-            type === 'error' ? modalStyles.errorHeader : modalStyles.successHeader
-          ]}>
-            <Text style={modalStyles.title}>{title}</Text>
-          </View>
-          <View style={modalStyles.body}>
-            <Text style={modalStyles.message}>{message}</Text>
-          </View>
-          <TouchableOpacity
-              style={[
-                modalStyles.button,
-                type === 'error' ? modalStyles.errorButton : modalStyles.successButton
-              ]}
-              onPress={onClose}
-          >
-            <Text style={modalStyles.buttonText}>OK</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-);
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { API_URL } from '../../utils/api'
+import './Auth.css'
 
 const RegisterScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [imie, setImie] = useState('');
-  const [nazwisko, setNazwisko] = useState('');
-  const [numerTelefonu, setNumerTelefonu] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [language, setLanguage] = useState<string>('pl');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRegistrationSuccessful, setIsRegistrationSuccessful] = useState(false);
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [imie, setImie] = useState('')
+  const [nazwisko, setNazwisko] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
-  const [errors, setErrors] = useState({
-    email: false,
-    password: false,
-    confirmPassword: false,
-    username: false,
-    imie: false,
-    nazwisko: false,
-    numerTelefonu: false
-  });
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
 
-  const [modalConfig, setModalConfig] = useState<{
-    title: string;
-    message: string;
-    type: 'error' | 'success';
-  }>({
-    title: '',
-    message: '',
-    type: 'error'
-  });
+    // Prosta walidacja - tylko czy pola nie są puste
+    if (!email || !imie || !nazwisko || !password || !confirmPassword) {
+      setError('Wszystkie pola są wymagane')
+      return
+    }
 
-  useEffect(() => {
-    const loadLanguage = async () => {
-      try {
-        const storedLang = await AsyncStorage.getItem('language');
-        if (storedLang) setLanguage(storedLang);
-      } catch (error) {
-        console.error('Błąd podczas wczytywania języka:', error);
-      }
-    };
-    loadLanguage();
-  }, []);
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePassword = (password: string): boolean => {
-    return password.length >= 6;
-  };
-
-  const changeLanguage = async (lang: string) => {
+    setLoading(true)
     try {
-      setLanguage(lang);
-      await AsyncStorage.setItem('language', lang);
-    } catch (error) {
-      console.error('Błąd podczas zmiany języka:', error);
-    }
-  };
-
-  const handleModalClose = () => {
-    setModalVisible(false);
-    if (isRegistrationSuccessful) {
-      navigation.navigate('Login');
-    }
-  };
-
-  const showModal = (title: string, message: string, type: 'error' | 'success') => {
-    setModalConfig({ title, message, type });
-    setModalVisible(true);
-  };
-
-  const handleRegister = async () => {
-    setErrors({
-      email: false,
-      password: false,
-      confirmPassword: false,
-      username: false,
-      imie: false,
-      nazwisko: false,
-      numerTelefonu: false
-    });
-
-    let hasErrors = false;
-
-    if (!imie) {
-      setErrors(prev => ({ ...prev, imie: true }));
-      hasErrors = true;
-    }
-
-    if (!nazwisko) {
-      setErrors(prev => ({ ...prev, nazwisko: true }));
-      hasErrors = true;
-    }
-
-    if (!numerTelefonu) {
-      setErrors(prev => ({ ...prev, numerTelefonu: true }));
-      hasErrors = true;
-    }
-
-    if (!username) {
-      setErrors(prev => ({ ...prev, username: true }));
-      hasErrors = true;
-    }
-
-    if (!email) {
-      setErrors(prev => ({ ...prev, email: true }));
-      hasErrors = true;
-    }
-
-    if (!password) {
-      setErrors(prev => ({ ...prev, password: true }));
-      hasErrors = true;
-    }
-
-    if (!confirmPassword) {
-      setErrors(prev => ({ ...prev, confirmPassword: true }));
-      hasErrors = true;
-    }
-
-    if (hasErrors) {
-      showModal('Błąd', 'Proszę wypełnić wszystkie pola', 'error');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setErrors(prev => ({ ...prev, email: true }));
-      showModal('Błąd', 'Nieprawidłowy format adresu email', 'error');
-      return;
-    }
-
-    if (!validatePassword(password)) {
-      setErrors(prev => ({ ...prev, password: true }));
-      showModal('Błąd', 'Hasło musi mieć co najmniej 6 znaków', 'error');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setErrors(prev => ({ ...prev, password: true, confirmPassword: true }));
-      showModal('Błąd', 'Hasła nie są identyczne', 'error');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/auth/register`, {   // <- poprawka endpointu!
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username,
           mail: email,
-          haslo: password,
           imie,
           nazwisko,
-          numertelefonu: numerTelefonu,
-          stanowisko: 'Pracownik',
-          role: 'user'
-        })
-      });
-
-      const data = await response.json();
+          password
+        }),
+      })
+      const data = await response.json()
 
       if (data.success) {
-        setIsRegistrationSuccessful(true);
-        showModal('Sukces', 'Rejestracja zakończona powodzeniem!', 'success');
-        if (data.token) {
-          await AsyncStorage.setItem('token', data.token);
-        }
+        setSuccess('Rejestracja pomyślna! Możesz się teraz zalogować.')
+        setTimeout(() => navigate('/login'), 2000)
       } else {
-        throw new Error(data.error || 'Wystąpił błąd podczas rejestracji');
+        setError(data.error || 'Rejestracja nie powiodła się')
       }
-    } catch (error) {
-      setIsRegistrationSuccessful(false);
-      showModal('Błąd', error instanceof Error ? error.message : 'Wystąpił błąd podczas rejestracji', 'error');
+    } catch (err) {
+      setError('Błąd połączenia')
     } finally {
-      setIsLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-    >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <ImageBackground source={BackgroundImage} style={styles.background}>
-            <SafeAreaView style={styles.container}>
-                <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => navigation.navigate('Main')}
-                    accessibilityLabel="Zamknij ekran rejestracji"
-                >
-                    <Ionicons name="close" size={30} color="#000" />
-                </TouchableOpacity>
+    <div className="auth-container">
+      <div className="auth-box">
+        <h1>🔧 AutoRepair</h1>
+        <h2>Rejestracja nowego konta</h2>
 
-                <View style={styles.contentWrapper}>
-                    <View style={styles.content}>
-                        <Text style={styles.title}>Rejestracja</Text>
+        {error && <div className="alert alert-error">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
 
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.imie && styles.inputError
-                    ]}
-                    placeholder="Imię"
-                    placeholderTextColor="#aaa"
-                    value={imie}
-                    onChangeText={(text: string) => {
-                      setImie(text);
-                      setErrors(prev => ({ ...prev, imie: false }));
-                    }}
-                    accessibilityLabel="Pole imię"
-                    accessibilityHint="Wprowadź swoje imię"
-                />
+        <form onSubmit={handleRegister}>
+          <div className="form-group">
+            <label htmlFor="email">Adres email:</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Wpisz swój email"
+              disabled={loading}
+            />
+          </div>
 
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.nazwisko && styles.inputError
-                    ]}
-                    placeholder="Nazwisko"
-                    placeholderTextColor="#aaa"
-                    value={nazwisko}
-                    onChangeText={(text: string) => {
-                      setNazwisko(text);
-                      setErrors(prev => ({ ...prev, nazwisko: false }));
-                    }}
-                    accessibilityLabel="Pole nazwisko"
-                    accessibilityHint="Wprowadź swoje nazwisko"
-                />
+          <div className="form-group">
+            <label htmlFor="imie">Imię:</label>
+            <input
+              id="imie"
+              type="text"
+              value={imie}
+              onChange={(e) => setImie(e.target.value)}
+              placeholder="Wpisz swoje imię"
+              disabled={loading}
+            />
+          </div>
 
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.numerTelefonu && styles.inputError
-                    ]}
-                    placeholder="Numer telefonu"
-                    placeholderTextColor="#aaa"
-                    keyboardType="phone-pad"
-                    value={numerTelefonu}
-                    onChangeText={(text: string) => {
-                      setNumerTelefonu(text);
-                      setErrors(prev => ({ ...prev, numerTelefonu: false }));
-                    }}
-                    accessibilityLabel="Pole numer telefonu"
-                    accessibilityHint="Wprowadź swój numer telefonu"
-                />
+          <div className="form-group">
+            <label htmlFor="nazwisko">Nazwisko:</label>
+            <input
+              id="nazwisko"
+              type="text"
+              value={nazwisko}
+              onChange={(e) => setNazwisko(e.target.value)}
+              placeholder="Wpisz swoje nazwisko"
+              disabled={loading}
+            />
+          </div>
 
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.username && styles.inputError
-                    ]}
-                    placeholder="Nazwa użytkownika"
-                    placeholderTextColor="#aaa"
-                    autoCapitalize="none"
-                    value={username}
-                    onChangeText={(text: string) => {
-                      setUsername(text);
-                      setErrors(prev => ({ ...prev, username: false }));
-                    }}
-                    accessibilityLabel="Pole nazwa użytkownika"
-                    accessibilityHint="Wprowadź swoją nazwę użytkownika"
-                />
+          <div className="form-group">
+            <label htmlFor="password">Hasło:</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Wpisz hasło"
+              disabled={loading}
+            />
+          </div>
 
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.email && styles.inputError
-                    ]}
-                    placeholder="Email"
-                    placeholderTextColor="#aaa"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    value={email}
-                    onChangeText={(text: string) => {
-                      setEmail(text);
-                      setErrors(prev => ({ ...prev, email: false }));
-                    }}
-                    accessibilityLabel="Pole email"
-                    accessibilityHint="Wprowadź swój adres email"
-                />
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Powtórz hasło:</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Powtórz hasło"
+              disabled={loading}
+            />
+          </div>
 
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.password && styles.inputError
-                    ]}
-                    placeholder="Hasło"
-                    placeholderTextColor="#aaa"
-                    secureTextEntry
-                    value={password}
-                    onChangeText={(text: string) => {
-                      setPassword(text);
-                      setErrors(prev => ({ ...prev, password: false }));
-                    }}
-                    accessibilityLabel="Pole hasło"
-                    accessibilityHint="Wprowadź swoje hasło"
-                />
+          <button type="submit" disabled={loading} className="btn-primary">
+            {loading ? 'Rejestracja w toku...' : 'Zarejestruj się'}
+          </button>
+        </form>
 
-                <TextInput
-                    style={[
-                      styles.input,
-                      errors.confirmPassword && styles.inputError
-                    ]}
-                    placeholder="Potwierdź hasło"
-                    placeholderTextColor="#aaa"
-                    secureTextEntry
-                    value={confirmPassword}
-                    onChangeText={(text: string) => {
-                      setConfirmPassword(text);
-                      setErrors(prev => ({ ...prev, confirmPassword: false }));
-                    }}
-                    accessibilityLabel="Pole potwierdzenie hasła"
-                    accessibilityHint="Wprowadź ponownie swoje hasło"
-                />
+        <div className="auth-links">
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="link-button"
+          >
+            Masz już konto? Zaloguj się
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-                <TouchableOpacity
-                    style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-                    onPress={handleRegister}
-                    disabled={isLoading}
-                    accessibilityLabel="Przycisk zarejestruj"
-                >
-                  {isLoading ? (
-                      <ActivityIndicator color="#fff" />
-                  ) : (
-                      <Text style={styles.loginButtonText}>Zarejestruj</Text>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => navigation.navigate('Login')}
-                    accessibilityLabel="Powrót do ekranu logowania"
-                >
-                  <Text style={styles.loginLink}>Masz już konto? Zaloguj się!</Text>
-                </TouchableOpacity>
-                    </View>
-                </View>
-
-                <View style={styles.languagePickerContainer}>
-                    <Text style={styles.label}>Język</Text>
-            <Picker
-                selectedValue={language}
-                style={styles.picker}
-                onValueChange={changeLanguage}
-                mode="dropdown"
-                accessibilityLabel="Wybór języka"
-            >
-              <Picker.Item label="Polski" value="pl" />
-              <Picker.Item label="English" value="en" />
-            </Picker>
-                </View>
-
-                <CustomAlert
-                    visible={modalVisible}
-                    title={modalConfig.title}
-                    message={modalConfig.message}
-                    type={modalConfig.type}
-                    onClose={handleModalClose}
-                />
-            </SafeAreaView>
-        </ImageBackground>
-      </ScrollView>
-    </KeyboardAvoidingView>
-);
-};
-
-const modalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 15,
-    overflow: 'hidden',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  header: {
-    padding: 15,
-    alignItems: 'center',
-  },
-  errorHeader: {
-    backgroundColor: '#ff6b6b',
-  },
-  successHeader: {
-    backgroundColor: '#51cf66',
-  },
-  title: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  body: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  message: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
-  },
-  button: {
-    padding: 15,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  errorButton: {
-    backgroundColor: '#fff0f0',
-  },
-  successButton: {
-    backgroundColor: '#f0fff0',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
-
-const styles = StyleSheet.create({
-  loginLink: {
-    color: '#4A90E2',
-    marginTop: 16,
-    alignSelf: 'center',
-    fontSize: 14,
-  },
-  background: {
-    flex: 1,
-    width: '100%',
-    height: '80%',
-    resizeMode: 'cover'
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 32,
-    backgroundColor: 'transparent',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingTop: 300,
-    paddingBottom: 20,
-  },
-  content: {},
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 32,
-    alignSelf: 'center',
-    color: '#333',
-  },
-  input: {
-    height: 50,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    borderColor: '#ddd',
-    borderWidth: 1,
-  },
-  inputError: {
-    borderColor: '#ff6b6b',
-    backgroundColor: '#fff0f0',
-  },
-  loginButton: {
-    backgroundColor: '#4A90E2',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  loginButtonDisabled: {
-    opacity: 0.7,
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  languagePickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 16,
-    color: '#333',
-    marginRight: 16,
-  },
-  picker: {
-    flex: 1,
-    height: 50,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 8,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
-  },
-});
-
-export default RegisterScreen;
+export default RegisterScreen

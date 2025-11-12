@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginScreen from './screens/Auth/LoginScreen'
 import HomeScreen from './screens/Dashboard/HomeScreen'
 import PlaceholderScreen from './screens/PlaceholderScreen'
+import UserProfileScreen from './screens/Profile/UserProfileScreen'
 import Zlecenia from './screens/Zlecenia/Zlecenia'
 import Pojazdy from './screens/Pojazdy/Pojazdy'
 import Klienci from './screens/Klienci/Klienci'
@@ -42,7 +43,7 @@ function App() {
         <Route path="/raport" element={<PlaceholderScreen />} />
         <Route path="/add-raport" element={<PlaceholderScreen />} />
         <Route path="/user-rapports" element={<PlaceholderScreen />} />
-
+        <Route path="/UserProfileScreen" element={<UserProfileScreen />} />
         <Route path="/zlecenia" element={<Zlecenia />} />
         <Route path="/pojazdy" element={<Pojazdy />} />
         <Route path="/klienci" element={<Klienci />} />
