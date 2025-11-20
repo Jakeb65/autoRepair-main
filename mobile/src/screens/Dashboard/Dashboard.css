@@ -1,13 +1,10 @@
-/* ========================================
-   DASHBOARD - AutoRepair
-   Profesjonalny system dla serwisów samochodowych
-   ======================================== */
+
 
 * {
   box-sizing: border-box;
 }
 
-/* GŁÓWNY KONTENER */
+
 .dashboard-container {
   min-height: 100vh;
   display: flex;
@@ -17,7 +14,7 @@
   color: #fff;
 }
 
-/* HEADER - NAGŁÓWEK */
+
 .dashboard-header {
   background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 100%);
   backdrop-filter: blur(10px);
@@ -41,7 +38,7 @@
   text-shadow: 0 2px 8px rgba(255, 102, 0, 0.3);
 }
 
-/* TOP HORIZONTAL MENU BAR */
+
 
 .top-menu-bar {
   display: flex;
@@ -51,14 +48,13 @@
   background: linear-gradient(90deg, rgba(255,102,0,0.03), rgba(0,0,0,0));
   border-bottom: 1px solid rgba(255,102,0,0.06);
   width: 100%;
-  /* allow children to shrink so they evenly distribute across the row */
   flex-wrap: nowrap;
   overflow-x: hidden;
 }
 
 .top-menu-card {
   flex: 1 1 0;
-  min-width: 0; /* allow shrinking below intrinsic width */
+  min-width: 0; 
   background: linear-gradient(135deg, #111 0%, #1f1f1f 100%);
   border: 1px solid rgba(255,102,0,0.12);
   border-radius: 10px;
@@ -86,7 +82,7 @@
   text-align: center;
 }
 
-/* LOGOUT BUTTON */
+
 .btn-logout {
   background: rgba(255, 102, 0, 0.15);
   color: #ff6600;
@@ -114,7 +110,7 @@
   transform: none;
 }
 
-/* GŁÓWNA ZAWARTOŚĆ */
+
 .dashboard-main {
   flex: 1;
   display: flex;
@@ -127,7 +123,7 @@
   width: 100%;
 }
 
-/* MAIN CONTENT LAYOUT */
+
 .content-area {
   display: flex;
   gap: 30px;
@@ -208,7 +204,7 @@
   box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
-/* SEKCJA POWITALNA */
+
 .welcome-section {
   text-align: center;
   color: white;
@@ -235,7 +231,7 @@
   color: #ccc;
 }
 
-/* GRID MENU */
+
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -245,7 +241,7 @@
   animation: fadeInUp 0.7s ease-out 0.2s both;
 }
 
-/* KARTY MENU */
+
 .menu-card {
   background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
   border: 2px solid #ff6600;
@@ -262,7 +258,7 @@
   align-items: center;
 }
 
-/* EFEKT ŚWIETLNY NA HOVER */
+
 .menu-card::before {
   content: '';
   position: absolute;
@@ -285,7 +281,7 @@
   border-color: #ff8c33;
 }
 
-/* IKONA */
+
 .menu-icon {
   font-size: 60px;
   margin-bottom: 20px;
@@ -298,7 +294,6 @@
   transform: scale(1.2) rotate(8deg);
 }
 
-/* TYTUŁ KARTY */
 .menu-card h3 {
   font-size: 22px;
   margin: 0 0 12px 0;
@@ -312,7 +307,7 @@
   color: #ff8c33;
 }
 
-/* OPIS KARTY */
+
 .menu-card p {
   font-size: 14px;
   color: #aaa;
@@ -321,7 +316,7 @@
   font-weight: 500;
 }
 
-/* FOOTER */
+
 .dashboard-footer {
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
@@ -335,9 +330,6 @@
   letter-spacing: 0.3px;
 }
 
-/* ========================================
-   ANIMACJE
-   ======================================== */
 
 @keyframes fadeInDown {
   from {
@@ -361,9 +353,6 @@
   }
 }
 
-/* ========================================
-   RESPONSYWNOŚĆ - TABLET (768px i mniej)
-   ======================================== */
 
 @media (max-width: 768px) {
   .dashboard-header {
@@ -402,11 +391,10 @@
     padding: 28px 18px;
   }
 
-  /* Adjust top menu and content area on tablet */
   .top-menu-bar {
     padding: 12px 20px;
     gap: 12px;
-    flex-wrap: wrap; /* allow wrapping on tablet */
+    flex-wrap: wrap; 
   }
 
   .top-menu-card {
@@ -444,10 +432,6 @@
     font-size: 13px;
   }
 }
-
-/* ========================================
-   RESPONSYWNOŚĆ - MOBILE (480px i mniej)
-   ======================================== */
 
 @media (max-width: 480px) {
   .dashboard-header {
@@ -506,7 +490,6 @@
     font-size: 12px;
   }
 
-  /* Mobile tweaks: top menu smaller and stacked content */
   .top-menu-bar {
     padding: 8px 12px;
     gap: 8px;

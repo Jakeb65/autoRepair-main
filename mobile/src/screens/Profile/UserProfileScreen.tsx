@@ -27,7 +27,6 @@ interface UserData {
 const UserProfileScreen: React.FC = () => {
   const navigate = useNavigate()
   
-  // Mock danych klienta
   const [userData] = useState<UserData>({
     id: 'USR-001',
     imie: 'Jan',
@@ -69,7 +68,6 @@ const UserProfileScreen: React.FC = () => {
       </header>
 
       <main className="profile-main">
-        {/* Sekcja nagłówkowa z awatarem */}
         <div className="profile-avatar-section">
           <div className="avatar">{userData.avatar}</div>
           <h2>{userData.imie} {userData.nazwisko}</h2>
@@ -79,7 +77,6 @@ const UserProfileScreen: React.FC = () => {
           )}
         </div>
 
-        {/* Ocena i liczba recenzji */}
         <div className="profile-rating-section">
           <div className="rating-item">
             <span className="rating-label">Ocena:</span>
@@ -91,7 +88,6 @@ const UserProfileScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Dane kontaktowe */}
         <div className="profile-section">
           <h3>Dane Kontaktowe</h3>
           <div className="info-group">
@@ -106,7 +102,6 @@ const UserProfileScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Dane osobowe */}
         <div className="profile-section">
           <h3>Dane Osobowe</h3>
           <div className="info-group">
@@ -121,7 +116,6 @@ const UserProfileScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Adres */}
         <div className="profile-section">
           <h3>Adres Zamieszkania</h3>
           <div className="info-group">
@@ -144,7 +138,6 @@ const UserProfileScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Informacje o koncie */}
         <div className="profile-section">
           <h3>Informacje o Koncie</h3>
           <div className="info-group">
@@ -165,7 +158,6 @@ const UserProfileScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Przyciski akcji */}
         <div className="profile-actions">
           <button onClick={handleEditProfile} className="btn-primary">
             Edytuj Profil

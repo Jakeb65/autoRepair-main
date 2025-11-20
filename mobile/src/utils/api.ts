@@ -1,6 +1,4 @@
-// Mock API Layer for Web Application
 
-// Placeholder API URL used by some screens; replace with real endpoint if needed.
 export const API_URL = ''
 
 export interface ProfileType {

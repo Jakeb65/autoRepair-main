@@ -6,7 +6,6 @@ const PlaceholderScreen: React.FC<{ title?: string }> = ({ title }) => {
   const navigate = useNavigate()
   const location = useLocation()
   
-  // Generuj tytuł z pathu jeśli nie podano
   const getTitle = () => {
     if (title) return title
     const path = location.pathname

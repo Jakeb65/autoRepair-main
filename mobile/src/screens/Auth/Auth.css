@@ -1,8 +1,3 @@
-/* ========================================
-   AUTH SCREENS - AutoRepair
-   Profesjonalny design dla serwisów samochodowych
-   ======================================== */
-
 * {
   box-sizing: border-box;
 }
@@ -200,9 +195,6 @@
   border-left-color: #1e7e34;
 }
 
-/* ========================================
-   RESPONSYWNOŚĆ
-   ======================================== */
 
 @media (max-width: 600px) {
   .auth-box {

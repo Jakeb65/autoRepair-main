@@ -17,22 +17,18 @@ declare module '*.webp' {
   export default content;
 }
 
-// Shims for React Native / Expo / Navigation packages used in the repo
 declare module 'react-native'
 declare module '@expo/vector-icons' {
-  // Provide named exports for common icon sets used in the repo
   export const Ionicons: any
   const whatever: any
   export default whatever
 }
 
 declare module '@react-navigation/bottom-tabs' {
-  // Minimal shim so createBottomTabNavigator<T>() accepts a generic in TS
   export function createBottomTabNavigator<T = any>(): any
 }
 
 declare module '@react-navigation/native' {
-  // NavigationProp supports a generic param in many usages in the repo
   export type NavigationProp<T = any> = any
   export function useNavigation<T = any>(): any
 }
@@ -51,5 +47,4 @@ declare module '@react-native-picker/picker' {
   export default Picker
 }
 
-// Generic shim for any other untyped package imports used as a quick workaround
 declare module '*-untyped'
