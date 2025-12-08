@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_URL } from '../../utils/api'
+import { registerProfile } from '../../utils/api'
 import './Auth.css'
 
 const RegisterScreen: React.FC = () => {
@@ -25,27 +25,19 @@ const RegisterScreen: React.FC = () => {
       return
     }
 
+    if (password !== confirmPassword) {
+      setError('Hasła nie są zgodne')
+      return
+    }
+
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mail: email,
-          imie,
-          nazwisko,
-          password
-        }),
-      })
-      const data = await response.json()
-
-      if (data.success) {
+      const resp = await registerProfile({ imie, nazwisko, mail: email, haslo: password })
+      if (resp.success) {
         setSuccess('Rejestracja pomyślna! Możesz się teraz zalogować.')
         setTimeout(() => navigate('/login'), 2000)
       } else {
-        setError(data.error || 'Rejestracja nie powiodła się')
+        setError(resp.message || 'Rejestracja nie powiodła się')
       }
     } catch (err) {
       setError('Błąd połączenia')
