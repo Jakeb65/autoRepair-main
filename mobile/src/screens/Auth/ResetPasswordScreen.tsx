@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_URL } from '../../utils/api'
+import { resetPassword } from '../../utils/api'
 import './Auth.css'
 
 const ResetPasswordScreen: React.FC = () => {
@@ -25,27 +25,19 @@ const ResetPasswordScreen: React.FC = () => {
       return
     }
 
+    if (newPassword !== confirmPassword) {
+      setError('Hasła nie są zgodne')
+      return
+    }
+
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mail: email,
-          imie,
-          nazwisko,
-          newPassword
-        }),
-      })
-      const data = await response.json()
-
-      if (data.success) {
+      const resp = await resetPassword({ mail: email, imie, nowe_haslo: newPassword })
+      if (resp.success) {
         setSuccess('Hasło zostało zmienione pomyślnie!')
         setTimeout(() => navigate('/login'), 2000)
       } else {
-        setError(data.error || 'Wystąpił błąd podczas resetowania hasła')
+        setError(resp.message || 'Wystąpił błąd podczas resetowania hasła')
       }
     } catch (err) {
       setError('Błąd połączenia')
