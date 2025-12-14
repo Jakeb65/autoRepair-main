@@ -1,7 +1,25 @@
-﻿import React, { useState } from 'react'
+﻿import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../../utils/api'
 import './Dashboard.css'
+
+type KpiTone = 'ok' | 'warn' | 'bad'
+
+type KPI = {
+  title: string
+  value: string
+  hint: string
+  tone?: KpiTone
+  onClick?: () => void
+}
+
+type ActivityItem = {
+  id: string
+  ts: string
+  text: string
+  kind: 'order' | 'stock' | 'invoice' | 'calendar' | 'message'
+  onClick?: () => void
+}
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
@@ -14,7 +32,7 @@ const Dashboard: React.FC = () => {
   }
 
   const menuItems = [
-    { path: '/UserProfileScreen', label: '👤 Profil', desc: 'Moje dane' },
+    { path: '/UserProfileScreen', label: '👤 Profil' },
     { path: '/zlecenia', label: '🧾 Zlecenia' },
     { path: '/pojazdy', label: '🚗 Pojazdy' },
     { path: '/klienci', label: '👥 Klienci' },
@@ -36,6 +54,35 @@ const Dashboard: React.FC = () => {
     status: 'Potwierdzona',
   }
 
+  // MOCK — później podepniemy pod API
+  const kpis: KPI[] = useMemo(
+    () => [
+      { title: 'Zlecenia dziś', value: '6', hint: '+2 vs wczoraj', tone: 'ok', onClick: () => navigate('/zlecenia') },
+      { title: 'W trakcie', value: '3', hint: '2 na podnośniku', tone: 'warn', onClick: () => navigate('/zlecenia') },
+      { title: 'Braki magazynowe', value: '2', hint: 'Filtr oleju, klocki', tone: 'bad', onClick: () => navigate('/magazyn') },
+      { title: 'Faktury oczekujące', value: '4', hint: '1 przeterminowana', tone: 'warn', onClick: () => navigate('/faktury') },
+    ],
+    [navigate]
+  )
+
+  const activity: ActivityItem[] = useMemo(
+    () => [
+      { id: 'a1', ts: '5 min temu', kind: 'order', text: 'Zlecenie #128 → status: w_trakcie', onClick: () => navigate('/zlecenia') },
+      { id: 'a2', ts: '18 min temu', kind: 'stock', text: 'Magazyn: filtr oleju poniżej minimum', onClick: () => navigate('/magazyn') },
+      { id: 'a3', ts: '35 min temu', kind: 'invoice', text: 'Faktura FV/2025/112 wystawiona', onClick: () => navigate('/faktury') },
+      { id: 'a4', ts: '1 godz. temu', kind: 'calendar', text: 'Wizyta dodana: Diagnostyka (Dziś 13:00)', onClick: () => navigate('/kalendarz') },
+      { id: 'a5', ts: '2 godz. temu', kind: 'message', text: 'Nowa wiadomość od klienta: Jan Kowalski', onClick: () => navigate('/wiadomosci') },
+    ],
+    [navigate]
+  )
+
+  const toneClass = (tone?: KpiTone) => {
+    if (tone === 'ok') return 'kpi ok'
+    if (tone === 'warn') return 'kpi warn'
+    if (tone === 'bad') return 'kpi bad'
+    return 'kpi'
+  }
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
@@ -47,11 +94,7 @@ const Dashboard: React.FC = () => {
 
       <div className="top-menu-bar">
         {menuItems.map((item) => (
-          <button
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            className="top-menu-card"
-          >
+          <button key={item.path} onClick={() => navigate(item.path)} className="top-menu-card">
             <div className="menu-icon">{item.label.split(' ')[0]}</div>
             <div className="top-menu-label">{item.label.split(' ').slice(1).join(' ')}</div>
           </button>
@@ -61,12 +104,25 @@ const Dashboard: React.FC = () => {
       <main className="dashboard-main">
         <section className="welcome-section">
           <h2>Witaj w systemie!</h2>
-          <p>Zarządzaj swoimi naprawami i serwisami</p>
+          <p>Twój panel dnia: zlecenia, wizyty, alerty i aktywność.</p>
         </section>
 
-        <div className="content-area">
-          <div className="appointment-card">
-            <div className="appointment-header">
+        {/* KPI */}
+        <section className="kpi-grid">
+          {kpis.map((k) => (
+            <button key={k.title} className={toneClass(k.tone)} onClick={k.onClick}>
+              <div className="kpi-title">{k.title}</div>
+              <div className="kpi-value">{k.value}</div>
+              <div className="kpi-hint">{k.hint}</div>
+            </button>
+          ))}
+        </section>
+
+        {/* DÓŁ — lepiej ułożony niż 2 karty */}
+        <section className="dashboard-grid">
+          {/* Następna wizyta (zostawiamy, ale bardziej “panelowo”) */}
+          <div className="panel panel-wide">
+            <div className="panel-header">
               <h3>Następna wizyta</h3>
               <span className="status">{upcomingAppointment.status}</span>
             </div>
@@ -78,17 +134,53 @@ const Dashboard: React.FC = () => {
               <p><strong>Mechanik:</strong> {upcomingAppointment.mechanic}</p>
             </div>
 
-            <div className="appointment-actions">
+            <div className="panel-actions">
               <button className="btn-primary" onClick={() => navigate('/kalendarz')}>Umów nową wizytę</button>
               <button className="btn-secondary" onClick={() => navigate('/zlecenia')}>Szczegóły</button>
             </div>
+
+            {/* Szybkie akcje (mini) */}
+            <div className="quick-actions">
+              <button className="btn-secondary" onClick={() => navigate('/search')}>🔍 Szybkie wyszukiwanie</button>
+              <button className="btn-secondary" onClick={() => navigate('/wiadomosci')}>💬 Wiadomości</button>
+              <button className="btn-secondary" onClick={() => navigate('/magazyn')}>📦 Magazyn</button>
+            </div>
           </div>
 
-          <div className="spacer-card">
-            <h3>Twoje zadania</h3>
-            <p>Brak aktywnych zadań. Możesz umówić nową wizytę lub sprawdzić historię.</p>
+          {/* Aktywność + alerty */}
+          <div className="panel">
+            <div className="panel-header">
+              <h3>Ostatnia aktywność</h3>
+              <button className="btn-secondary" onClick={() => navigate('/wiadomosci')}>Wiadomości</button>
+            </div>
+
+            <div className="feed">
+              {activity.map((a) => (
+                <button key={a.id} className="feed-item" onClick={a.onClick}>
+                  <span className={`dot ${a.kind}`} />
+                  <div className="feed-main">
+                    <div className="feed-text">{a.text}</div>
+                    <div className="feed-ts">{a.ts}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="panel-actions">
+              <button className="btn-secondary" onClick={() => navigate('/magazyn')}>Sprawdź magazyn</button>
+              <button className="btn-secondary" onClick={() => navigate('/faktury')}>Faktury</button>
+            </div>
+
+            <div className="alert-box">
+              <div className="alert-title">⚠️ Alerty</div>
+              <ul className="alert-list">
+                <li>Braki w magazynie: filtr oleju</li>
+                <li>1 faktura przeterminowana</li>
+                <li>2 wizyty do potwierdzenia</li>
+              </ul>
+            </div>
           </div>
-        </div>
+        </section>
       </main>
 
       <footer className="dashboard-footer">

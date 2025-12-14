@@ -1,10 +1,12 @@
 import { run } from "./db.js";
 
 export async function initDb() {
-  // ważne w SQLite: włącz FK
+  // SQLite: wymuś FK
   await run(`PRAGMA foreign_keys = ON;`);
 
-  // users
+  /* =========================
+     USERS (pracownicy / auth)
+     ========================= */
   await run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,24 +16,177 @@ export async function initDb() {
       telefon TEXT,
       rola TEXT NOT NULL DEFAULT 'user',
       haslo TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'aktywny',
+      last_login_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
 
-  // orders
+  /* =========================
+     CUSTOMERS (klienci)
+     ========================= */
   await run(`
-    CREATE TABLE IF NOT EXISTS orders (
+    CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nazwa TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'nowe',
-      opis TEXT,
-      uzytkownik_id INTEGER NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (uzytkownik_id) REFERENCES users(id) ON DELETE CASCADE
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
 
-  // indeksy (wydajność)
+  /* =========================
+     VEHICLES (pojazdy)
+     ========================= */
+  await run(`
+    CREATE TABLE IF NOT EXISTS vehicles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL,
+      make TEXT NOT NULL,
+      model TEXT NOT NULL,
+      year INTEGER,
+      plate TEXT NOT NULL UNIQUE,
+      vin TEXT,
+      last_service_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+    )
+  `);
+
+  /* =========================
+     ORDERS (zlecenia)
+     ========================= */
+  await run(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      service TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'nowe',
+      opis TEXT,
+      customer_id INTEGER NOT NULL,
+      vehicle_id INTEGER NOT NULL,
+      mechanic_user_id INTEGER,
+      created_by_user_id INTEGER,
+      start_at TEXT,
+      end_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+      FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+      FOREIGN KEY (mechanic_user_id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `);
+
+  /* =========================
+     APPOINTMENTS (kalendarz)
+     ========================= */
+  await run(`
+    CREATE TABLE IF NOT EXISTS appointments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      start_at TEXT NOT NULL,
+      end_at TEXT,
+      status TEXT NOT NULL DEFAULT 'zaplanowana',
+      customer_id INTEGER,
+      vehicle_id INTEGER,
+      order_id INTEGER,
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+      FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+    )
+  `);
+
+  /* =========================
+     PARTS (magazyn)
+     ========================= */
+  await run(`
+    CREATE TABLE IF NOT EXISTS parts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      sku TEXT NOT NULL UNIQUE,
+      brand TEXT,
+      stock INTEGER NOT NULL DEFAULT 0,
+      min_stock INTEGER NOT NULL DEFAULT 0,
+      price REAL NOT NULL DEFAULT 0,
+      location TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  /* =========================
+     INVOICES (faktury)
+     ========================= */
+  await run(`
+    CREATE TABLE IF NOT EXISTS invoices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      number TEXT NOT NULL UNIQUE,
+      customer_id INTEGER NOT NULL,
+      order_id INTEGER,
+      issue_date TEXT NOT NULL,
+      due_date TEXT,
+      amount REAL NOT NULL,
+      status TEXT NOT NULL DEFAULT 'oczekuje',
+      pdf_path TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+    )
+  `);
+
+  /* =========================
+     MESSAGES (komunikacja)
+     ========================= */
+  await run(`
+    CREATE TABLE IF NOT EXISTS message_threads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      customer_id INTEGER,
+      order_id INTEGER,
+      created_by_user_id INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+      FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      thread_id INTEGER NOT NULL,
+      sender_user_id INTEGER,
+      sender_customer_id INTEGER,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (thread_id) REFERENCES message_threads(id) ON DELETE CASCADE,
+      FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (sender_customer_id) REFERENCES customers(id) ON DELETE SET NULL
+    )
+  `);
+
+  /* =========================
+     NOTIFICATIONS
+     ========================= */
+  await run(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT,
+      read_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  /* =========================
+     INDEXES
+     ========================= */
   await run(`CREATE INDEX IF NOT EXISTS idx_users_mail ON users(mail);`);
-  await run(`CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(uzytkownik_id);`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_orders_vehicle ON orders(vehicle_id);`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_at);`);
 }
