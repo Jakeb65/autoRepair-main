@@ -1,77 +1,98 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginScreen from './src/screens/Auth/LoginScreen'
-import RegisterScreen from './src/screens/Auth/RegisterScreen'
-import ResetPasswordScreen from './src/screens/Auth/ResetPasswordScreen'
-import UserProfileScreen from './src/screens/Profile/UserProfileScreen'
-import EditProfileScreen from './src/screens/Profile/EditProfileScreen'
-import SettingsScreen from './src/screens/Settings/SettingsScreen'
-import ListScreen from './src/screens/List/ListScreen'
-import DetailScreen from './src/screens/Details/DetailScreen'
-import SearchScreen from './src/screens/Search/SearchScreen'
-import NotificationsScreen from './src/screens/Notifications/NotificationsScreen'
-import FormScreen from './src/screens/Form/FormScreen'
-import PaymentScreen from './src/screens/Payment/PaymentScreen'
-import TransactionDetailsScreen from './src/screens/Payment/TransactionDetails'
-import ItemDetailsScreen from './src/screens/Details/ItemDetailsScreen'
-import SuccessScreen from './src/screens/Feedback/SuccessScreen'
-import OrderHistoryScreen from './src/screens/History/OrderHistoryScreen'
-import HelpSupportScreen from './src/screens/Support/HelpSupportScreen'
-import AdminPanelScreen from './src/screens/Admin/AdminPanelScreen'
-import CurrentLocationScreen from './src/screens/Location/CurrentLocationScreen'
-import AssignedOrdersScreen from './src/screens/AssignedOrders/AssignedOrdersScreen'
-import RaportScreen from './src/screens/Raport/RaportScreen'
-import AddRaportScreen from './src/screens/Raport/AddRaportScreen'
-import UserRaportScreen from './src/screens/Raport/UserRaportsScreen'
 import HomeScreen from './src/screens/Dashboard/HomeScreen'
-import { ErrorProvider } from './src/screens/Feedback/ErrorContext'
-import ErrorOverlay from './src/screens/Feedback/ErrorOverlay'
-import { ThemeProvider } from './src/screens/ThemeContext/ThemeContext'
+import ClientDashboard from './src/screens/ClientDashboard/ClientDashboard'
+import PlaceholderScreen from './src/screens/PlaceholderScreen'
+import UserProfileScreen from './src/screens/Profile/UserProfileScreen'
+import Zlecenia from './src/screens/Zlecenia/Zlecenia'
+import Pojazdy from './src/screens/Pojazdy/Pojazdy'
+import Klienci from './src/screens/Klienci/Klienci'
+import Kalendarz from './src/screens/Kalendarz/Kalendarz'
+import Search from './src/screens/Search/Search'
+import Settings from './src/screens/Settings/Settings'
+import AdminUsers from './src/screens/AdminUsers/AdminUsers'
 import Magazyn from './src/screens/Magazyn/Magazyn'
 import Faktury from './src/screens/Faktury/Faktury'
 import AiHelper from './src/screens/AiHelper/AiHelper'
 import Messages from './src/screens/Messages/Messages'
+import { getToken } from './src/utils/api'
+
+type JwtPayload = {
+  id?: number
+  mail?: string
+  rola?: string
+  exp?: number
+}
+
+function decodeJwt(token: string): JwtPayload | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const payload = parts[1]
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const json = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(json) as JwtPayload
+  } catch {
+    return null
+  }
+}
+
+function getRoleFromToken(): string | null {
+  const token = getToken()
+  if (!token) return null
+  const decoded = decodeJwt(token)
+  return decoded?.rola ?? null
+}
+
+function HomeGate() {
+  const token = getToken()
+  if (!token) return <Navigate to="/login" replace />
+
+  const role = getRoleFromToken()
+  if (role === 'user') return <ClientDashboard />
+  return <HomeScreen />
+}
 
 function App() {
   return (
-    <ThemeProvider>
-      <ErrorProvider>
-        <BrowserRouter>
-          <ErrorOverlay />
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<LoginScreen />} />
-            <Route path="/register" element={<RegisterScreen />} />
-            <Route path="/reset-password" element={<ResetPasswordScreen />} />
-            <Route path="/home" element={<HomeScreen />} />
-            <Route path="/profile" element={<UserProfileScreen />} />
-            <Route path="/edit-profile" element={<EditProfileScreen />} />
-            <Route path="/settings" element={<SettingsScreen />} />
-            <Route path="/list" element={<ListScreen />} />
-            <Route path="/detail" element={<DetailScreen />} />
-            <Route path="/item-detail/:id" element={<ItemDetailsScreen />} />
-            <Route path="/search" element={<SearchScreen />} />
-            <Route path="/notifications" element={<NotificationsScreen />} />
-            <Route path="/form" element={<FormScreen />} />
-            <Route path="/payment" element={<PaymentScreen />} />
-            <Route path="/transaction-details" element={<TransactionDetailsScreen />} />
-            <Route path="/success" element={<SuccessScreen />} />
-            <Route path="/order-history" element={<OrderHistoryScreen />} />
-            <Route path="/help-support" element={<HelpSupportScreen />} />
-            <Route path="/admin" element={<AdminPanelScreen />} />
-            <Route path="/location" element={<CurrentLocationScreen />} />
-            <Route path="/assigned-orders" element={<AssignedOrdersScreen />} />
-            <Route path="/raport" element={<RaportScreen />} />
-            <Route path="/add-raport" element={<AddRaportScreen />} />
-            <Route path="/user-rapports" element={<UserRaportScreen />} />
-            <Route path="/magazyn" element={<Magazyn />} />
-            <Route path="/faktury" element={<Faktury />} />
-            <Route path="/ai" element={<AiHelper />} />
-            <Route path="/wiadomosci" element={<Messages />} />
-          </Routes>
-        </BrowserRouter>
-      </ErrorProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <Routes>
+        {/* Start: jeśli jest token -> dashboard wg roli, jeśli nie -> login */}
+        <Route path="/" element={<HomeGate />} />
+
+        {/* Auth */}
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/register" element={<PlaceholderScreen />} />
+        <Route path="/reset-password" element={<PlaceholderScreen />} />
+
+        {/* Dashboardy */}
+        <Route path="/home" element={<HomeGate />} />
+        <Route path="/client" element={<ClientDashboard />} />
+
+        {/* Twoje ekrany */}
+        <Route path="/UserProfileScreen" element={<UserProfileScreen />} />
+        <Route path="/zlecenia" element={<Zlecenia />} />
+        <Route path="/pojazdy" element={<Pojazdy />} />
+        <Route path="/klienci" element={<Klienci />} />
+        <Route path="/kalendarz" element={<Kalendarz />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/admin/uzytkownicy" element={<AdminUsers />} />
+        <Route path="/magazyn" element={<Magazyn />} />
+        <Route path="/faktury" element={<Faktury />} />
+        <Route path="/ai" element={<AiHelper />} />
+        <Route path="/wiadomosci" element={<Messages />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
