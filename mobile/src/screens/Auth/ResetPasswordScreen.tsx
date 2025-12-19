@@ -7,21 +7,37 @@ const ResetPasswordScreen: React.FC = () => {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [imie, setImie] = useState('')
-  const [nazwisko, setNazwisko] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess('')
 
-    // Prosta walidacja - tylko czy pola nie są puste
-    if (!email || !imie || !nazwisko || !newPassword || !confirmPassword) {
+    const mail = email.trim()
+    const first = imie.trim()
+
+    if (!mail || !first || !newPassword || !confirmPassword) {
       setError('Wszystkie pola są wymagane')
+      return
+    }
+
+    if (!validateEmail(mail)) {
+      setError('Proszę podać prawidłowy adres email')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      setError('Hasło musi mieć minimum 6 znaków')
       return
     }
 
@@ -32,10 +48,10 @@ const ResetPasswordScreen: React.FC = () => {
 
     setLoading(true)
     try {
-      const resp = await resetPassword({ mail: email, imie, nowe_haslo: newPassword })
+      const resp = await resetPassword({ mail, imie: first, nowe_haslo: newPassword })
       if (resp.success) {
         setSuccess('Hasło zostało zmienione pomyślnie!')
-        setTimeout(() => navigate('/login'), 2000)
+        setTimeout(() => navigate('/login'), 900)
       } else {
         setError(resp.message || 'Wystąpił błąd podczas resetowania hasła')
       }
@@ -81,18 +97,6 @@ const ResetPasswordScreen: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="nazwisko">Nazwisko:</label>
-            <input
-              id="nazwisko"
-              type="text"
-              value={nazwisko}
-              onChange={(e) => setNazwisko(e.target.value)}
-              placeholder="Wpisz swoje nazwisko"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="form-group">
             <label htmlFor="newPassword">Nowe hasło:</label>
             <input
               id="newPassword"
@@ -122,18 +126,10 @@ const ResetPasswordScreen: React.FC = () => {
         </form>
 
         <div className="auth-links">
-          <button
-            type="button"
-            onClick={() => navigate('/login')}
-            className="link-button"
-          >
+          <button type="button" onClick={() => navigate('/login')} className="link-button">
             Powrót do logowania
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/register')}
-            className="link-button"
-          >
+          <button type="button" onClick={() => navigate('/register')} className="link-button">
             Nie masz konta? Zarejestruj się
           </button>
         </div>

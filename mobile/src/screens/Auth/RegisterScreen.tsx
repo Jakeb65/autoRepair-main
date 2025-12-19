@@ -14,14 +14,32 @@ const RegisterScreen: React.FC = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess('')
 
-    // Prosta walidacja - tylko czy pola nie są puste
-    if (!email || !imie || !nazwisko || !password || !confirmPassword) {
+    const mail = email.trim()
+    const first = imie.trim()
+    const last = nazwisko.trim()
+
+    if (!mail || !first || !last || !password || !confirmPassword) {
       setError('Wszystkie pola są wymagane')
+      return
+    }
+
+    if (!validateEmail(mail)) {
+      setError('Proszę podać prawidłowy adres email')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Hasło musi mieć minimum 6 znaków')
       return
     }
 
@@ -32,10 +50,10 @@ const RegisterScreen: React.FC = () => {
 
     setLoading(true)
     try {
-      const resp = await registerProfile({ imie, nazwisko, mail: email, haslo: password })
+      const resp = await registerProfile({ imie: first, nazwisko: last, mail, haslo: password })
       if (resp.success) {
         setSuccess('Rejestracja pomyślna! Możesz się teraz zalogować.')
-        setTimeout(() => navigate('/login'), 2000)
+        setTimeout(() => navigate('/login'), 900)
       } else {
         setError(resp.message || 'Rejestracja nie powiodła się')
       }
@@ -122,11 +140,7 @@ const RegisterScreen: React.FC = () => {
         </form>
 
         <div className="auth-links">
-          <button
-            type="button"
-            onClick={() => navigate('/login')}
-            className="link-button"
-          >
+          <button type="button" onClick={() => navigate('/login')} className="link-button">
             Masz już konto? Zaloguj się
           </button>
         </div>

@@ -14,24 +14,29 @@
   border-bottom: 2px solid rgba(255,102,0,0.2);
   margin-bottom: 18px;
 }
+
 .klienci-header h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 800;
   color: #ff6600;
-  text-shadow: 0 2px 8px rgba(255,102,0,0.25);
-  letter-spacing: -0.5px;
 }
 
-.k-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.k-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .k-search {
-  background: linear-gradient(135deg, #111 0%, #1f1f1f 100%);
+  background: #111;
   border: 1px solid rgba(255,102,0,0.12);
   color: #fff;
   padding: 12px 14px;
   border-radius: 10px;
   min-width: 280px;
 }
+
 .k-btn-primary {
   background: #ff6600;
   color: #111;
@@ -51,53 +56,54 @@
 }
 
 .client-card {
-  background: linear-gradient(135deg, #151515 0%, #222 100%);
-  border: 1px solid rgba(255,102,0,0.12);
+  background: #151515;
   border-radius: 14px;
   padding: 16px;
-  color: #fff;
   box-shadow: 0 18px 40px rgba(0,0,0,0.45);
 }
-.client-card .client-top {
+
+.client-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: 6px;
 }
-.client-card .name {
+
+.name {
   font-size: 18px;
   font-weight: 800;
   color: #ffcc99;
 }
-.client-card .counts { color: #bbb; }
-.client-card .meta { color: #ddd; margin: 6px 0; }
 
-.client-card .list { margin-top: 8px; }
-.client-card .list-title {
-  color: #ff9a3c;
-  margin-bottom: 6px;
-  font-weight: 800;
+.counts {
+  color: #bbb;
 }
-.client-card ul { margin: 0; padding-left: 18px; color: #cfcfcf; }
 
-.client-card .card-actions {
+.meta {
+  margin: 6px 0;
+}
+
+.list {
+  margin-top: 8px;
+}
+
+.list-title {
+  color: #ff9a3c;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.card-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 10px;
 }
-.client-card .btn-secondary {
+
+.btn-secondary {
   background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.12);
   padding: 10px 14px;
   border-radius: 10px;
   cursor: pointer;
-}
-
-@media (max-width: 768px) {
-  .klienci-container { padding: 30px 30px; }
-}
-@media (max-width: 480px) {
-  .klienci-container { padding: 22px 20px; }
 }

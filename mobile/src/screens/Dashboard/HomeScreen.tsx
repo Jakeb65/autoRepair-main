@@ -1,6 +1,14 @@
-﻿import React, { useMemo, useState } from 'react'
+﻿import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { logout } from '../../utils/api'
+import {
+  logout,
+  getOrders,
+  getAppointments,
+  getLowStockParts,
+  getInvoices,
+  getThreads,
+  getNotifications,
+} from '../../utils/api'
 import './Dashboard.css'
 
 type KpiTone = 'ok' | 'warn' | 'bad'
@@ -17,16 +25,61 @@ type ActivityItem = {
   id: string
   ts: string
   text: string
-  kind: 'order' | 'stock' | 'invoice' | 'calendar' | 'message'
+  kind: 'order' | 'stock' | 'invoice' | 'calendar' | 'message' | 'notification'
   onClick?: () => void
+}
+
+type UpcomingAppointment = {
+  vehicle: string
+  service: string
+  date: string
+  mechanic: string
+  status: string
+}
+
+function isoToLocalShort(isoLike: string) {
+  const d = new Date(isoLike)
+  if (Number.isNaN(d.getTime())) return isoLike
+  return d.toLocaleString()
+}
+
+function timeAgo(isoLike: string) {
+  const d = new Date(isoLike)
+  const t = d.getTime()
+  if (Number.isNaN(t)) return isoLike
+
+  const diff = Date.now() - t
+  const sec = Math.floor(diff / 1000)
+  if (sec < 60) return `${sec}s temu`
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min} min temu`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr} godz. temu`
+  const days = Math.floor(hr / 24)
+  return `${days} dni temu`
+}
+
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
+  const [loadingLogout, setLoadingLogout] = useState(false)
+
+  // DATA STATE
+  const [loadingData, setLoadingData] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [orders, setOrders] = useState<any[]>([])
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [lowStock, setLowStock] = useState<any[]>([])
+  const [invoices, setInvoices] = useState<any[]>([])
+  const [threads, setThreads] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
 
   const handleLogout = async () => {
-    setLoading(true)
+    setLoadingLogout(true)
     await logout()
     navigate('/login')
   }
@@ -46,35 +99,277 @@ const Dashboard: React.FC = () => {
     { path: '/admin/uzytkownicy', label: '👑 Admin' },
   ]
 
-  const upcomingAppointment = {
-    vehicle: 'Toyota Corolla 2016',
-    service: 'Przegląd + wymiana oleju',
-    date: '2025-11-20 10:30',
-    mechanic: 'Jan Kowalski',
-    status: 'Potwierdzona',
-  }
+  useEffect(() => {
+    let alive = true
 
-  // MOCK — później podepniemy pod API
-  const kpis: KPI[] = useMemo(
-    () => [
-      { title: 'Zlecenia dziś', value: '6', hint: '+2 vs wczoraj', tone: 'ok', onClick: () => navigate('/zlecenia') },
-      { title: 'W trakcie', value: '3', hint: '2 na podnośniku', tone: 'warn', onClick: () => navigate('/zlecenia') },
-      { title: 'Braki magazynowe', value: '2', hint: 'Filtr oleju, klocki', tone: 'bad', onClick: () => navigate('/magazyn') },
-      { title: 'Faktury oczekujące', value: '4', hint: '1 przeterminowana', tone: 'warn', onClick: () => navigate('/faktury') },
-    ],
-    [navigate]
-  )
+    const load = async () => {
+      setLoadingData(true)
+      setError(null)
 
-  const activity: ActivityItem[] = useMemo(
-    () => [
-      { id: 'a1', ts: '5 min temu', kind: 'order', text: 'Zlecenie #128 → status: w_trakcie', onClick: () => navigate('/zlecenia') },
-      { id: 'a2', ts: '18 min temu', kind: 'stock', text: 'Magazyn: filtr oleju poniżej minimum', onClick: () => navigate('/magazyn') },
-      { id: 'a3', ts: '35 min temu', kind: 'invoice', text: 'Faktura FV/2025/112 wystawiona', onClick: () => navigate('/faktury') },
-      { id: 'a4', ts: '1 godz. temu', kind: 'calendar', text: 'Wizyta dodana: Diagnostyka (Dziś 13:00)', onClick: () => navigate('/kalendarz') },
-      { id: 'a5', ts: '2 godz. temu', kind: 'message', text: 'Nowa wiadomość od klienta: Jan Kowalski', onClick: () => navigate('/wiadomosci') },
-    ],
-    [navigate]
-  )
+      const [o, a, ls, inv, th, n] = await Promise.all([
+        getOrders(),
+        getAppointments(),
+        getLowStockParts(),
+        getInvoices(),
+        getThreads(),
+        getNotifications(),
+      ])
+
+      if (!alive) return
+
+      if (!o.success) return setError(o.message || 'Błąd pobierania zleceń'), setLoadingData(false)
+      if (!a.success) return setError(a.message || 'Błąd pobierania kalendarza'), setLoadingData(false)
+      if (!ls.success) return setError(ls.message || 'Błąd pobierania magazynu'), setLoadingData(false)
+      if (!inv.success) return setError(inv.message || 'Błąd pobierania faktur'), setLoadingData(false)
+      if (!th.success) return setError(th.message || 'Błąd pobierania wiadomości'), setLoadingData(false)
+      if (!n.success) return setError(n.message || 'Błąd pobierania powiadomień'), setLoadingData(false)
+
+      setOrders(o.data || [])
+      setAppointments(a.data || [])
+      setLowStock(ls.data || [])
+      setInvoices(inv.data || [])
+      setThreads(th.data || [])
+      setNotifications(n.data || [])
+      setLoadingData(false)
+    }
+
+    load()
+
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const upcomingAppointment: UpcomingAppointment = useMemo(() => {
+    const now = new Date()
+
+    const future = (appointments || [])
+      .filter((x) => x?.start_at)
+      .map((x) => ({ ...x, _d: new Date(x.start_at) }))
+      .filter((x) => !Number.isNaN(x._d.getTime()) && x._d.getTime() >= now.getTime())
+      .sort((a, b) => a._d.getTime() - b._d.getTime())
+
+    const first = future[0]
+    if (!first) {
+      return {
+        vehicle: '—',
+        service: 'Brak zaplanowanych wizyt',
+        date: '—',
+        mechanic: '—',
+        status: 'Brak',
+      }
+    }
+
+    // jeśli backend nie zwraca nazwy pojazdu, to wyświetlamy ID (później można zrobić join na backendzie)
+    const vehicleLabel = first?.vehicle_label || (first?.vehicle_id ? `Pojazd #${first.vehicle_id}` : '—')
+    const serviceLabel = first?.service || first?.title || 'Wizyta'
+    const mechanicLabel = first?.mechanic_name || (first?.mechanic_user_id ? `Mechanik #${first.mechanic_user_id}` : '—')
+
+    return {
+      vehicle: vehicleLabel,
+      service: serviceLabel,
+      date: isoToLocalShort(first.start_at),
+      mechanic: mechanicLabel,
+      status: first.status || 'zaplanowana',
+    }
+  }, [appointments])
+
+  const kpis: KPI[] = useMemo(() => {
+    const now = new Date()
+
+    const ordersToday = (orders || []).filter((o) => {
+      const base = o?.start_at || o?.created_at
+      if (!base) return false
+      const d = new Date(base)
+      if (Number.isNaN(d.getTime())) return false
+      return sameDay(d, now)
+    }).length
+
+    const inProgress = (orders || []).filter((o) => String(o?.status) === 'w_trakcie').length
+
+    const low = (lowStock || []).length
+
+    const pending = (invoices || []).filter((i) => String(i?.status) === 'oczekuje').length
+    const overdue = (invoices || []).filter((i) => {
+      if (!i?.due_date) return false
+      const due = new Date(i.due_date)
+      if (Number.isNaN(due.getTime())) return false
+      return String(i?.status) !== 'zaplacona' && due.getTime() < now.getTime()
+    }).length
+
+    const toneOrders: KpiTone = ordersToday >= 8 ? 'warn' : 'ok'
+    const toneProgress: KpiTone = inProgress >= 5 ? 'warn' : inProgress >= 2 ? 'ok' : 'ok'
+    const toneStock: KpiTone = low >= 3 ? 'bad' : low >= 1 ? 'warn' : 'ok'
+    const toneInvoices: KpiTone = overdue >= 1 ? 'bad' : pending >= 4 ? 'warn' : 'ok'
+
+    return [
+      {
+        title: 'Zlecenia dziś',
+        value: String(ordersToday),
+        hint: 'wg start_at / created_at',
+        tone: toneOrders,
+        onClick: () => navigate('/zlecenia'),
+      },
+      {
+        title: 'W trakcie',
+        value: String(inProgress),
+        hint: 'status: w_trakcie',
+        tone: toneProgress,
+        onClick: () => navigate('/zlecenia'),
+      },
+      {
+        title: 'Braki magazynowe',
+        value: String(low),
+        hint: low ? 'min_stock przekroczony' : 'brak alertów',
+        tone: toneStock,
+        onClick: () => navigate('/magazyn'),
+      },
+      {
+        title: 'Faktury oczekujące',
+        value: String(pending),
+        hint: overdue ? `${overdue} przetermin.` : 'bez zaległości',
+        tone: toneInvoices,
+        onClick: () => navigate('/faktury'),
+      },
+    ]
+  }, [orders, lowStock, invoices, navigate])
+
+  const activity: ActivityItem[] = useMemo(() => {
+    const items: { tsIso: string; item: ActivityItem }[] = []
+
+    // ostatnie zlecenia
+    ;(orders || [])
+      .slice()
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 2)
+      .forEach((o) => {
+        const tsIso = o.created_at || o.start_at || new Date().toISOString()
+        items.push({
+          tsIso,
+          item: {
+            id: `order-${o.id}`,
+            ts: timeAgo(tsIso),
+            kind: 'order',
+            text: `Zlecenie #${o.id} → status: ${o.status}`,
+            onClick: () => navigate('/zlecenia'),
+          },
+        })
+      })
+
+    // braki magazynowe
+    ;(lowStock || []).slice(0, 1).forEach((p) => {
+      const tsIso = p.created_at || new Date().toISOString()
+      items.push({
+        tsIso,
+        item: {
+          id: `stock-${p.id}`,
+          ts: 'alert',
+          kind: 'stock',
+          text: `Magazyn: ${p.name} poniżej minimum`,
+          onClick: () => navigate('/magazyn'),
+        },
+      })
+    })
+
+    // faktury
+    ;(invoices || [])
+      .slice()
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 1)
+      .forEach((i) => {
+        const tsIso = i.created_at || new Date().toISOString()
+        items.push({
+          tsIso,
+          item: {
+            id: `inv-${i.id}`,
+            ts: timeAgo(tsIso),
+            kind: 'invoice',
+            text: `Faktura ${i.number} → ${i.status}`,
+            onClick: () => navigate('/faktury'),
+          },
+        })
+      })
+
+    // wizyty
+    ;(appointments || [])
+      .slice()
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .slice(0, 1)
+      .forEach((a) => {
+        const tsIso = a.created_at || a.start_at || new Date().toISOString()
+        items.push({
+          tsIso,
+          item: {
+            id: `appt-${a.id}`,
+            ts: timeAgo(tsIso),
+            kind: 'calendar',
+            text: `Wizyta: ${a.title} (${isoToLocalShort(a.start_at)})`,
+            onClick: () => navigate('/kalendarz'),
+          },
+        })
+      })
+
+    // wątki wiadomości
+    ;(threads || [])
+      .slice()
+      .sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())
+      .slice(0, 1)
+      .forEach((t) => {
+        const tsIso = t.updated_at || t.created_at || new Date().toISOString()
+        items.push({
+          tsIso,
+          item: {
+            id: `msg-${t.id}`,
+            ts: timeAgo(tsIso),
+            kind: 'message',
+            text: `Wiadomości: ${t.title}`,
+            onClick: () => navigate('/wiadomosci'),
+          },
+        })
+      })
+
+    // powiadomienia (nieprzeczytane)
+    const unread = (notifications || []).filter((n) => !n.read_at)
+    if (unread.length) {
+      items.push({
+        tsIso: unread[0].created_at || new Date().toISOString(),
+        item: {
+          id: `notif-${unread[0].id}`,
+          ts: timeAgo(unread[0].created_at || new Date().toISOString()),
+          kind: 'notification',
+          text: `🔔 ${unread.length} nowych powiadomień`,
+          onClick: () => navigate('/notifications'),
+        },
+      })
+    }
+
+    return items
+      .sort((a, b) => new Date(b.tsIso).getTime() - new Date(a.tsIso).getTime())
+      .slice(0, 5)
+      .map((x) => x.item)
+  }, [orders, lowStock, invoices, appointments, threads, notifications, navigate])
+
+  const alertList = useMemo(() => {
+    const list: string[] = []
+
+    const low = (lowStock || []).length
+    if (low > 0) list.push(`Braki w magazynie: ${low} pozycji`)
+
+    const now = new Date()
+    const overdue = (invoices || []).filter((i) => {
+      if (!i?.due_date) return false
+      const due = new Date(i.due_date)
+      if (Number.isNaN(due.getTime())) return false
+      return String(i?.status) !== 'zaplacona' && due.getTime() < now.getTime()
+    }).length
+    if (overdue > 0) list.push(`${overdue} faktura/y przeterminowana/e`)
+
+    const toConfirm = (appointments || []).filter((a) => String(a?.status) === 'do_potwierdzenia').length
+    if (toConfirm > 0) list.push(`${toConfirm} wizyty do potwierdzenia`)
+
+    if (!list.length) list.push('Brak krytycznych alertów 🎉')
+    return list
+  }, [lowStock, invoices, appointments])
 
   const toneClass = (tone?: KpiTone) => {
     if (tone === 'ok') return 'kpi ok'
@@ -87,8 +382,8 @@ const Dashboard: React.FC = () => {
     <div className="dashboard-container">
       <header className="dashboard-header">
         <h1>🔧 AutoRepair</h1>
-        <button onClick={handleLogout} disabled={loading} className="btn-logout">
-          {loading ? 'Wylogowywanie...' : 'Wyloguj'}
+        <button onClick={handleLogout} disabled={loadingLogout} className="btn-logout">
+          {loadingLogout ? 'Wylogowywanie...' : 'Wyloguj'}
         </button>
       </header>
 
@@ -105,6 +400,8 @@ const Dashboard: React.FC = () => {
         <section className="welcome-section">
           <h2>Witaj w systemie!</h2>
           <p>Twój panel dnia: zlecenia, wizyty, alerty i aktywność.</p>
+          {loadingData && <p style={{ opacity: 0.85, marginTop: 10 }}>⏳ Ładowanie danych…</p>}
+          {!loadingData && error && <p style={{ color: '#ffb3b3', marginTop: 10 }}>⚠️ {error}</p>}
         </section>
 
         {/* KPI */}
@@ -118,9 +415,8 @@ const Dashboard: React.FC = () => {
           ))}
         </section>
 
-        {/* DÓŁ — lepiej ułożony niż 2 karty */}
+        {/* DÓŁ */}
         <section className="dashboard-grid">
-          {/* Następna wizyta (zostawiamy, ale bardziej “panelowo”) */}
           <div className="panel panel-wide">
             <div className="panel-header">
               <h3>Następna wizyta</h3>
@@ -139,7 +435,6 @@ const Dashboard: React.FC = () => {
               <button className="btn-secondary" onClick={() => navigate('/zlecenia')}>Szczegóły</button>
             </div>
 
-            {/* Szybkie akcje (mini) */}
             <div className="quick-actions">
               <button className="btn-secondary" onClick={() => navigate('/search')}>🔍 Szybkie wyszukiwanie</button>
               <button className="btn-secondary" onClick={() => navigate('/wiadomosci')}>💬 Wiadomości</button>
@@ -147,7 +442,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Aktywność + alerty */}
           <div className="panel">
             <div className="panel-header">
               <h3>Ostatnia aktywność</h3>
@@ -174,9 +468,9 @@ const Dashboard: React.FC = () => {
             <div className="alert-box">
               <div className="alert-title">⚠️ Alerty</div>
               <ul className="alert-list">
-                <li>Braki w magazynie: filtr oleju</li>
-                <li>1 faktura przeterminowana</li>
-                <li>2 wizyty do potwierdzenia</li>
+                {alertList.map((x, idx) => (
+                  <li key={idx}>{x}</li>
+                ))}
               </ul>
             </div>
           </div>

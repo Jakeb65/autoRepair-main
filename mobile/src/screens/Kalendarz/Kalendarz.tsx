@@ -1,13 +1,97 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import './Kalendarz.css'
-import { visits, vehicles, customers } from '../../utils/mockData'
+import {
+  getAppointments,
+  getVehicles,
+  getCustomers,
+  createAppointment,
+  type AppointmentType,
+  type VehicleType,
+  type CustomerType,
+} from '../../utils/api'
+
+function pad(n: number) {
+  return String(n).padStart(2, '0')
+}
 
 function toISODate(d: Date) {
-  return d.toISOString().slice(0, 10)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 export default function Kalendarz() {
   const [selected, setSelected] = useState<string>(toISODate(new Date()))
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [appointments, setAppointments] = useState<AppointmentType[]>([])
+  const [vehicles, setVehicles] = useState<VehicleType[]>([])
+  const [customers, setCustomers] = useState<CustomerType[]>([])
+
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const [title, setTitle] = useState('')
+  const [customerId, setCustomerId] = useState<number | ''>('')
+  const [vehicleId, setVehicleId] = useState<number | ''>('')
+  const [startAt, setStartAt] = useState('')
+  const [endAt, setEndAt] = useState('')
+  const [notes, setNotes] = useState('')
+
+  const resetForm = () => {
+    setTitle('')
+    setCustomerId('')
+    setVehicleId('')
+    setStartAt('')
+    setEndAt('')
+    setNotes('')
+    setFormError(null)
+  }
+
+  const closeModal = () => {
+    setOpen(false)
+    resetForm()
+  }
+
+  const reloadAll = async () => {
+    setLoading(true)
+    setError(null)
+
+    const [aRes, vRes, cRes] = await Promise.all([getAppointments(), getVehicles(), getCustomers()])
+
+    if (!aRes.success) {
+      setError(aRes.message || 'Błąd pobierania wizyt')
+      setLoading(false)
+      return
+    }
+    if (!vRes.success) {
+      setError(vRes.message || 'Błąd pobierania pojazdów')
+      setLoading(false)
+      return
+    }
+    if (!cRes.success) {
+      setError(cRes.message || 'Błąd pobierania klientów')
+      setLoading(false)
+      return
+    }
+
+    setAppointments(aRes.data || [])
+    setVehicles(vRes.data || [])
+    setCustomers(cRes.data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      await reloadAll()
+      if (!alive) return
+    })()
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const days = useMemo(() => {
     const base = new Date()
@@ -21,29 +105,89 @@ export default function Kalendarz() {
     return arr
   }, [])
 
+  const vehiclesForCustomer = useMemo(() => {
+    if (!customerId) return []
+    return vehicles.filter((v) => v.customer_id === Number(customerId))
+  }, [vehicles, customerId])
+
+  useEffect(() => {
+    if (!customerId) {
+      setVehicleId('')
+      return
+    }
+    if (vehicleId) {
+      const v = vehicles.find((x) => x.id === Number(vehicleId))
+      if (!v || v.customer_id !== Number(customerId)) setVehicleId('')
+    }
+  }, [customerId])
+
   const dayVisits = useMemo(() => {
-    return visits
-      .filter(v => v.date.slice(0, 10) === selected)
-      .sort((a, b) => a.date.localeCompare(b.date))
-  }, [selected])
+    return (appointments || [])
+      .filter((v) => String(v.start_at || '').slice(0, 10) === selected)
+      .sort((a, b) => String(a.start_at || '').localeCompare(String(b.start_at || '')))
+  }, [appointments, selected])
+
+  const submitCreate = async () => {
+    setFormError(null)
+
+    const t = title.trim()
+    if (!t) return setFormError('Uzupełnij pole: Tytuł')
+    if (!startAt) return setFormError('Uzupełnij pole: Start')
+    if (!customerId) return setFormError('Wybierz klienta')
+    if (!vehicleId) return setFormError('Wybierz pojazd')
+
+    const startIso = startAt ? new Date(startAt).toISOString() : undefined
+    const endIso = endAt ? new Date(endAt).toISOString() : undefined
+
+    if (startIso && endIso) {
+      const a = new Date(startIso).getTime()
+      const b = new Date(endIso).getTime()
+      if (!Number.isNaN(a) && !Number.isNaN(b) && b < a) {
+        return setFormError('Data zakończenia nie może być wcześniejsza niż rozpoczęcia')
+      }
+    }
+
+    setSaving(true)
+    const resp = await createAppointment({
+      title: t,
+      start_at: startIso,
+      end_at: endIso,
+      status: 'zaplanowana',
+      customer_id: Number(customerId),
+      vehicle_id: Number(vehicleId),
+      order_id: undefined,
+      notes: notes.trim() ? notes.trim() : undefined,
+    })
+    setSaving(false)
+
+    if (!resp.success) {
+      setFormError(resp.message || 'Nie udało się utworzyć wizyty')
+      return
+    }
+
+    closeModal()
+    await reloadAll()
+  }
 
   return (
     <div className="kalendarz-container">
       <div className="kalendarz-header">
         <h1>Kalendarz</h1>
         <div className="k-actions">
-          <button className="k-btn-primary">Umów wizytę</button>
+          <button className="k-btn-primary" onClick={() => setOpen(true)}>
+            Umów wizytę
+          </button>
         </div>
       </div>
 
       <div className="calendar-strip">
-        {days.map(d => {
+        {days.map((d) => {
           const dayISO = toISODate(d)
           const isActive = dayISO === selected
           const label = d.toLocaleDateString(undefined, {
             weekday: 'short',
             day: '2-digit',
-            month: '2-digit'
+            month: '2-digit',
           })
           return (
             <button
@@ -57,35 +201,36 @@ export default function Kalendarz() {
         })}
       </div>
 
+      {loading && <div style={{ opacity: 0.85, padding: 12 }}>⏳ Ładowanie…</div>}
+      {!loading && error && <div style={{ color: '#ffb3b3', padding: 12 }}>⚠️ {error}</div>}
+
       <div className="kalendarz-grid">
-        {dayVisits.length === 0 ? (
-          <div className="empty-card">
-            Brak wizyt w tym dniu. Kliknij „Umów wizytę”, aby dodać nową.
-          </div>
+        {!loading && !error && dayVisits.length === 0 ? (
+          <div className="empty-card">Brak wizyt w tym dniu. Kliknij „Umów wizytę”, aby dodać nową.</div>
         ) : (
-          dayVisits.map(v => {
-            const veh = vehicles.find(x => x.id === v.vehicleId)
-            const cust = customers.find(x => x.id === v.customerId)
+          dayVisits.map((v) => {
+            const veh = vehicles.find((x) => x.id === v.vehicle_id)
+            const cust = customers.find((x) => x.id === v.customer_id)
+
+            const timeLabel = v.start_at
+              ? new Date(String(v.start_at)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : '—'
+
             return (
               <div key={v.id} className="visit-card">
                 <div className="visit-top">
-                  <div className="time">
-                    {new Date(v.date).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
+                  <div className="time">{timeLabel}</div>
                   <div className="title">{v.title}</div>
                 </div>
 
                 <div className="meta">
                   <b>Pojazd:</b>{' '}
                   {veh
-                    ? `${veh.make} ${veh.model} ${veh.year} — ${veh.plate}`
-                    : '—'}
+                    ? `${veh.make} ${veh.model} ${veh.year ?? ''} — ${veh.plate}`.trim()
+                    : `Pojazd #${v.vehicle_id ?? '—'}`}
                 </div>
                 <div className="meta">
-                  <b>Klient:</b> {cust?.name ?? '—'}
+                  <b>Klient:</b> {cust?.name ?? (v.customer_id ? `Klient #${v.customer_id}` : '—')}
                 </div>
 
                 <div className="card-actions">
@@ -97,6 +242,173 @@ export default function Kalendarz() {
           })
         )}
       </div>
+
+      {open && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModal()
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              width: 'min(760px, 100%)',
+              background: 'linear-gradient(135deg, #151515 0%, #222 100%)',
+              border: '1px solid rgba(255,102,0,0.15)',
+              borderRadius: 14,
+              padding: 18,
+              boxShadow: '0 18px 40px rgba(0,0,0,0.55)',
+              color: '#fff',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <h2 style={{ margin: 0, color: '#ff6600' }}>Umów wizytę</h2>
+              <button className="btn-secondary" onClick={closeModal} disabled={saving}>
+                Zamknij
+              </button>
+            </div>
+
+            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 6, color: '#ffcc99' }}>Tytuł</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="np. Diagnostyka / wymiana oleju"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,102,0,0.18)',
+                    background: '#0f0f0f',
+                    color: '#fff',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 6, color: '#ffcc99' }}>Klient</label>
+                <select
+                  value={customerId}
+                  onChange={(e) => setCustomerId(e.target.value ? Number(e.target.value) : '')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,102,0,0.18)',
+                    background: '#0f0f0f',
+                    color: '#fff',
+                  }}
+                >
+                  <option value="">Wybierz klienta…</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 6, color: '#ffcc99' }}>Pojazd</label>
+                <select
+                  value={vehicleId}
+                  onChange={(e) => setVehicleId(e.target.value ? Number(e.target.value) : '')}
+                  disabled={!customerId}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,102,0,0.18)',
+                    background: !customerId ? '#161616' : '#0f0f0f',
+                    color: '#fff',
+                    opacity: !customerId ? 0.7 : 1,
+                  }}
+                >
+                  <option value="">{customerId ? 'Wybierz pojazd…' : 'Najpierw wybierz klienta'}</option>
+                  {vehiclesForCustomer.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.make} {v.model} ({v.year ?? '—'}) • {v.plate}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 6, color: '#ffcc99' }}>Start</label>
+                <input
+                  type="datetime-local"
+                  value={startAt}
+                  onChange={(e) => setStartAt(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,102,0,0.18)',
+                    background: '#0f0f0f',
+                    color: '#fff',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 6, color: '#ffcc99' }}>Koniec (opcjonalnie)</label>
+                <input
+                  type="datetime-local"
+                  value={endAt}
+                  onChange={(e) => setEndAt(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,102,0,0.18)',
+                    background: '#0f0f0f',
+                    color: '#fff',
+                  }}
+                />
+              </div>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 6, color: '#ffcc99' }}>Notatki (opcjonalnie)</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={4}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,102,0,0.18)',
+                    background: '#0f0f0f',
+                    color: '#fff',
+                    resize: 'vertical',
+                  }}
+                />
+              </div>
+            </div>
+
+            {formError && <div style={{ marginTop: 12, color: '#ffb3b3' }}>⚠️ {formError}</div>}
+
+            <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button className="btn-secondary" onClick={closeModal} disabled={saving}>
+                Anuluj
+              </button>
+              <button className="k-btn-primary" onClick={submitCreate} disabled={saving}>
+                {saving ? 'Zapisywanie…' : 'Zapisz wizytę'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

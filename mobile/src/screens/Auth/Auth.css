@@ -1,4 +1,4 @@
-* {
+.auth-container, .auth-container * {
   box-sizing: border-box;
 }
 
@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #ff6600 100%);
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #ff6600 140%);
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -19,24 +19,29 @@
 .auth-container::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,102,0,0.1)"/><circle cx="80" cy="80" r="3" fill="rgba(255,102,0,0.1)"/></svg>');
+  inset: 0;
+  background:
+    radial-gradient(600px 300px at 20% 10%, rgba(255,102,0,0.20), transparent 60%),
+    radial-gradient(600px 300px at 80% 80%, rgba(255,102,0,0.16), transparent 60%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,102,0,0.12)"/><circle cx="80" cy="80" r="3" fill="rgba(255,102,0,0.10)"/><circle cx="70" cy="22" r="1.5" fill="rgba(255,102,0,0.10)"/><circle cx="25" cy="78" r="1.8" fill="rgba(255,102,0,0.10)"/></svg>');
+  background-size: auto, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  opacity: 0.9;
   pointer-events: none;
 }
 
 .auth-box {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
-  padding: 50px 40px;
   width: 100%;
   max-width: 420px;
   position: relative;
   z-index: 1;
-  border: 2px solid #ff6600;
+
+  background: linear-gradient(135deg, #ffffff 0%, #f6f6f6 100%);
+  border-radius: 16px;
+  padding: 50px 40px;
+
+  border: 2px solid rgba(255,102,0,0.95);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
 }
 
 .auth-box h1 {
@@ -45,6 +50,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+
   font-size: 36px;
   margin: 0 0 5px 0;
   font-weight: 800;
@@ -53,10 +59,9 @@
 
 .auth-box h2 {
   text-align: center;
-  color: #333;
   font-size: 18px;
   margin: 0 0 35px 0;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #666;
@@ -69,22 +74,23 @@
 .form-group label {
   display: block;
   color: #222;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 10px;
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .form-group input {
   width: 100%;
   padding: 14px 18px;
   border: 2px solid #ddd;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-sizing: border-box;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   font-family: inherit;
+  background: #fff;
+  color: #111;
 }
 
 .form-group input::placeholder {
@@ -98,9 +104,9 @@
 }
 
 .form-group input:disabled {
-  background-color: #f8f8f8;
+  background-color: #f6f6f6;
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 .btn-primary {
@@ -109,23 +115,24 @@
   background: linear-gradient(135deg, #1a1a1a 0%, #ff6600 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
   margin-top: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(255, 102, 0, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(255, 102, 0, 0.32);
+  filter: brightness(1.02);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(0);
 }
 
 .btn-primary:disabled {
@@ -139,7 +146,7 @@
   gap: 10px;
   margin-top: 28px;
   padding-top: 24px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 .link-button {
@@ -149,38 +156,33 @@
   cursor: pointer;
   font-size: 13px;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
   padding: 10px 8px;
-  border-radius: 4px;
-  font-weight: 600;
+  border-radius: 8px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .link-button:hover {
-  background-color: rgba(255, 102, 0, 0.08);
+  background-color: rgba(255, 102, 0, 0.10);
   color: #1a1a1a;
+  transform: translateY(-1px);
 }
 
 .alert {
   padding: 14px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-bottom: 20px;
   font-size: 13px;
-  animation: slideIn 0.3s ease;
+  animation: slideIn 0.25s ease;
   border-left: 4px solid;
-  font-weight: 500;
+  font-weight: 650;
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .alert-error {
@@ -194,7 +196,6 @@
   color: #1e7e34;
   border-left-color: #1e7e34;
 }
-
 
 @media (max-width: 600px) {
   .auth-box {
