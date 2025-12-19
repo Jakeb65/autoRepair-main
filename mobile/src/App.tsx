@@ -15,6 +15,8 @@ import Magazyn from './screens/Magazyn/Magazyn'
 import Faktury from './screens/Faktury/Faktury'
 import AiHelper from './screens/AiHelper/AiHelper'
 import Messages from './screens/Messages/Messages'
+import RegisterScreen from './screens/Auth/RegisterScreen'
+import ResetPasswordScreen from './screens/Auth/ResetPasswordScreen'
 
 function App() {
   return (
@@ -22,8 +24,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/register" element={<PlaceholderScreen />} />
-        <Route path="/reset-password" element={<PlaceholderScreen />} />
+        <Route path="/register" element={<RegisterScreen />} />
+        <Route path="/reset-password" element={<ResetPasswordScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/profile" element={<PlaceholderScreen />} />
         <Route path="/edit-profile" element={<PlaceholderScreen />} />

@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginScreen from './src/screens/Auth/LoginScreen'
+import RegisterScreen from './src/screens/Auth/RegisterScreen'
 import HomeScreen from './src/screens/Dashboard/HomeScreen'
 import ClientDashboard from './src/screens/ClientDashboard/ClientDashboard'
 import PlaceholderScreen from './src/screens/PlaceholderScreen'
@@ -68,8 +69,8 @@ function App() {
 
         {/* Auth */}
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/register" element={<PlaceholderScreen />} />
-        <Route path="/reset-password" element={<PlaceholderScreen />} />
+        <Route path="/register" element={<RegisterScreen />} />
+        <Route path="/reset-password" element={<RegisterScreen />} />
 
         {/* Dashboardy */}
         <Route path="/home" element={<HomeGate />} />

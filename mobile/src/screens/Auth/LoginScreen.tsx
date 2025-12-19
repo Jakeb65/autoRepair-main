@@ -1,9 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login, setToken } from '../../utils/api'
+import { login } from '../../utils/api'
 import './Auth.css'
-
-
 
 const LoginScreen: React.FC = () => {
   const navigate = useNavigate()
@@ -38,10 +36,7 @@ const LoginScreen: React.FC = () => {
       const response = await login(email, password)
       if (response.success) {
         setSuccess('Zalogowano pomyślnie!')
-        // api.login returns token inside response.data
-        const token = (response.data && (response.data as any).token) || ''
-        if (token) await setToken(token)
-        setTimeout(() => navigate('/home'), 1000)
+        setTimeout(() => navigate('/home'), 600)
       } else {
         setError(response.message || 'Logowanie nie powiodło się')
       }
@@ -92,18 +87,10 @@ const LoginScreen: React.FC = () => {
         </form>
 
         <div className="auth-links">
-          <button
-            type="button"
-            onClick={() => navigate('/reset-password')}
-            className="link-button"
-          >
+          <button type="button" onClick={() => navigate('/reset-password')} className="link-button">
             Zapomniałem hasła
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/register')}
-            className="link-button"
-          >
+          <button type="button" onClick={() => navigate('/register')} className="link-button">
             Rejestracja nowego konta
           </button>
         </div>
